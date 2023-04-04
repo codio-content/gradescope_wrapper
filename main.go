@@ -68,7 +68,7 @@ func submitResults(urlPost string) {
 
 func prepareSubmission() {
 	log.Println("Prepare submission")
-	_, err := exec.Command("rsync", "-av", "--exclude", "autograder.zip", "/home/codio/workspace", "/autograder/submission").Output()
+	_, err := exec.Command("rsync", "-av", "--exclude", "autograder.zip", "--exclude", "gradescope_wrapper", "/home/codio/workspace", "/autograder/submission").Output()
 	check(err)
 	log.Println("Prepare submission info")
 
