@@ -45,16 +45,19 @@ func submitResults(urlPost string) {
 	defer jsonFile.Close()
 	byteValue, err := ioutil.ReadAll(jsonFile)
 	check(err)
+
 	var results gradescopeResult
 	json.Unmarshal(byteValue, &results)
 	log.Println("Submit results to Codio")
 	score := fmt.Sprintf("%d", int64(results.Score))
+
 	response, err := http.PostForm(urlPost,
 		url.Values{"Grade": {score}, "Feedback": {results.Output}, "Format": {"html"}})
 	check(err)
 	defer response.Body.Close()
 	body, err := ioutil.ReadAll(response.Body)
 	check(err)
+
 	var codioOut codioResponse
 	json.Unmarshal(body, &codioOut)
 	log.Println("Done, response:")
