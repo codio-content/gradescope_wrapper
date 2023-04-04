@@ -35,24 +35,31 @@ func main() {
 }
 
 func submitResults(urlPost string) {
-	log.Println("Submit results from gradescope")
+	log.Println("Read results from gradescope")
+	exist, err := checkFileExists("/autograder/results/results.json")
+	if !exist {
+		panic("Gradescope results file not found")
+	}
 	jsonFile, err := os.Open("/autograder/results/results.json")
 	check(err)
 	defer jsonFile.Close()
-	byteValue, _ := ioutil.ReadAll(jsonFile)
+	byteValue, err := ioutil.ReadAll(jsonFile)
+	check(err)
 	var results gradescopeResult
 	json.Unmarshal(byteValue, &results)
-
 	log.Println("Submit results to Codio")
 	score := fmt.Sprintf("%d", int64(results.Score))
 	response, err := http.PostForm(urlPost,
-		url.Values{"Grade": {score}, "Format": {"html"}})
+		url.Values{"Grade": {score}, "Feedback": {results.Output}, "Format": {"html"}})
 	check(err)
 	defer response.Body.Close()
 	body, err := ioutil.ReadAll(response.Body)
 	check(err)
 	log.Println("Done, response:")
-	log.Println(body)
+	log.Println(string(body))
+	if response.StatusCode != 200 {
+		panic(fmt.Sprintf("Response Code %d", response.StatusCode))
+	}
 }
 
 func prepareSubmission() {
@@ -108,7 +115,7 @@ func execute() {
 	autograde.Stdout = stdoutFile
 	autograde.Start()
 	autograde.Wait()
-	log.Println(autograde.ProcessState.ExitCode())
+	log.Println(fmt.Sprintf("Exite Code: %d", autograde.ProcessState.ExitCode()))
 	if autograde.ProcessState.ExitCode() != 0 {
 		panic(fmt.Sprintf("run_autograde failed with %d", autograde.ProcessState.ExitCode()))
 	}
