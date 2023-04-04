@@ -50,9 +50,10 @@ func submitResults(urlPost string) {
 	json.Unmarshal(byteValue, &results)
 	log.Println("Submit results to Codio")
 	score := fmt.Sprintf("%d", int64(results.Score))
+	urlValues := url.Values{"grade": {score}, "feedback": {results.Output}, "format": {"html"}}
+	log.Println(urlValues)
+	response, err := http.PostForm(urlPost, urlValues)
 
-	response, err := http.PostForm(urlPost,
-		url.Values{"Grade": {score}, "Feedback": {results.Output}, "Format": {"html"}})
 	check(err)
 	defer response.Body.Close()
 	body, err := ioutil.ReadAll(response.Body)
@@ -68,7 +69,7 @@ func submitResults(urlPost string) {
 
 func prepareSubmission() {
 	log.Println("Prepare submission")
-	_, err := exec.Command("rsync", "-av", "--exclude", "autograder.zip", "--exclude", "gradescope_wrapper", "/home/codio/workspace", "/autograder/submission").Output()
+	_, err := exec.Command("rsync", "-av", "--exclude", "autograder.zip", "--exclude", "gradescope_wrapper", "/home/codio/workspace/", "/autograder/submission").Output()
 	check(err)
 	log.Println("Prepare submission info")
 
@@ -154,7 +155,8 @@ func reExcuteRoot() {
 	log.Println("switching to root")
 	ex, err := os.Executable()
 	check(err)
-	subProcess := exec.Command("sudo", "-E", ex)
+	path := os.Getenv("PATH")
+	subProcess := exec.Command("sudo", "-E", "env", fmt.Sprintf("PATH=%s", path), ex)
 	subProcess.Stdout = os.Stdout
 	subProcess.Stderr = os.Stderr
 	subProcess.Start()
