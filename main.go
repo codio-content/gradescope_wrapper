@@ -55,10 +55,11 @@ func submitResults(urlPost string) {
 	defer response.Body.Close()
 	body, err := ioutil.ReadAll(response.Body)
 	check(err)
+	var codioOut codioResponse
+	json.Unmarshal(body, &codioOut)
 	log.Println("Done, response:")
-	log.Println(string(body))
-	if response.StatusCode != 200 {
-		panic(fmt.Sprintf("Response Code %d", response.StatusCode))
+	if codioOut.Code != 1 {
+		panic(fmt.Sprintf("Response %d: %s", codioOut.Code, codioOut.Message))
 	}
 }
 

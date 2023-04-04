@@ -26,3 +26,8 @@ type codioAutogradeAssignment struct {
 	Start string `json:"start"`
 	End   string `json:"end"`
 }
+
+type codioResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
