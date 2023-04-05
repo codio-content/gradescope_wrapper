@@ -21,7 +21,16 @@ const notInUse = "not_in_use"
 func main() {
 	if checkRoot() {
 		url := os.Getenv("CODIO_AUTOGRADE_V2_URL")
+		if len(url) == 0 {
+			url = os.Getenv("CODIO_PARTIAL_POINTS_V2_URL")
+		}
+		if len(url) == 0 {
+			panic("No Feedback URL, enable partial points.")
+		}
 		os.Unsetenv("CODIO_AUTOGRADE_V2_URL")
+		os.Unsetenv("CODIO_PARTIAL_POINTS_V2_URL")
+		os.Unsetenv("CODIO_AUTOGRADE_URL")
+		os.Unsetenv("CODIO_PARTIAL_POINTS_URL")
 		cleanup()
 		createPaths()
 		unzip("/autograder/source")
@@ -50,7 +59,7 @@ func submitResults(urlPost string) {
 	json.Unmarshal(byteValue, &results)
 	log.Println("Submit results to Codio")
 	score := fmt.Sprintf("%d", int64(results.Score))
-	urlValues := url.Values{"grade": {score}, "feedback": {results.Output}, "format": {"html"}}
+	urlValues := url.Values{"grade": {score}, "points": {score}, "feedback": {results.Output}, "format": {"html"}}
 	log.Println(urlValues)
 	response, err := http.PostForm(urlPost, urlValues)
 
