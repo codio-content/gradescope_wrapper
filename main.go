@@ -14,11 +14,16 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"strings"
+
+	"golang.org/x/exp/slices"
 )
 
 const notInUse = "not_in_use"
 
 func main() {
+	args := os.Args[1:]
+	runSetup := slices.Contains(args, "run-setup")
 	if checkRoot() {
 		url := os.Getenv("CODIO_AUTOGRADE_V2_URL")
 		if len(url) == 0 {
@@ -34,6 +39,9 @@ func main() {
 		cleanup()
 		createPaths()
 		unzip("/autograder/source")
+		if runSetup {
+			executeSetupScript()
+		}
 		prepareSubmission()
 		execute()
 		submitResults(url)
@@ -41,6 +49,13 @@ func main() {
 	} else {
 		reExcuteRoot()
 	}
+}
+
+func executeSetupScript() {
+	log.Println("run setup.sh")
+	os.Chmod("/autograder/source/setup.sh", 0777)
+	_, err := exec.Command("/autograder/source/setup.sh").Output()
+	check(err)
 }
 
 func submitResults(urlPost string) {
@@ -59,7 +74,7 @@ func submitResults(urlPost string) {
 	json.Unmarshal(byteValue, &results)
 	log.Println("Submit results to Codio")
 	score := fmt.Sprintf("%d", int64(results.Score))
-	urlValues := url.Values{"grade": {score}, "points": {score}, "feedback": {results.Output}, "format": {"html"}}
+	urlValues := url.Values{"grade": {score}, "points": {score}, "feedback": {getFeedback(results)}, "format": {"md"}}
 	log.Println(urlValues)
 	response, err := http.PostForm(urlPost, urlValues)
 
@@ -74,6 +89,15 @@ func submitResults(urlPost string) {
 	if codioOut.Code != 1 {
 		panic(fmt.Sprintf("Response %d: %s", codioOut.Code, codioOut.Message))
 	}
+}
+
+func getFeedback(results gradescopeResult) string {
+	var output strings.Builder
+	output.WriteString(results.Output + "\n")
+	for _, test := range results.Tests {
+		output.WriteString(fmt.Sprintf("**%s** %s %f\n", test.Name, test.Status, test.Score))
+	}
+	return output.String()
 }
 
 func prepareSubmission() {

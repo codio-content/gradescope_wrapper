@@ -50,14 +50,14 @@ type gradescopeResultTests struct {
 	Score float64 `json:"score"` // TODO
 	// "score": 2.0, // optional, but required if not on top level submission
 	// "max_score": 2.0, // optional
-	// "status": "passed", // optional, see "Test case status" below
-	// "name": "Your name here", // optional
+	Status string `json:"status"` // optional, see "Test case status" below
+	Name   string `json:"name"`   // optional
 	// "name_format": "text", // optional formatting for the test case name, see "Output String Formatting" below
 	// "number": "1.1", // optional (will just be numbered in order of array if no number given)
 	// "output": "Giant multiline string that will be placed in a <pre> tag and collapsed by default", // optional
 	// "output_format": "text", // optional formatting for the test case output, see "Output String Formatting" below
 	// "tags": ["tag1", "tag2", "tag3"], // optional
-	// "visibility": "visible", // Optional visibility setting
+	Visibility string `json:"visibility"` // Optional visibility setting
 	// "extra_data": {} // Optional extra data to be stored
 }
 
