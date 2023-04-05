@@ -45,7 +45,7 @@ func main() {
 		prepareSubmission()
 		execute()
 		submitResults(url)
-		// cleanup()
+		cleanup()
 	} else {
 		reExcuteRoot()
 	}
