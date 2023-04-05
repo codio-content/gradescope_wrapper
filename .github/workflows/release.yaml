@@ -42,6 +42,7 @@ jobs:
     - name: build
       run: go build -ldflags "-s -w" -o dist/gradescope_wrapper
       env:
+        CGO_ENABLED: 0
         GOOS: ${{ matrix.goos }}
         GOARCH: ${{ matrix.goarch }}
 
