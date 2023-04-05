@@ -2,7 +2,7 @@
 
 ## Install 
 
-`sh -c "$(curl -fsSL https://raw.githubusercontent.com/codio-content/gradescope-wrapper/master/installer.sh)"`
+`sh -c "$(curl -fsSL https://raw.githubusercontent.com/codio-content/gradescope_wrapper/master/installer.sh)"`
 
 ## Use
 
