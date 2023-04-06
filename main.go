@@ -97,29 +97,43 @@ func getFeedback(results gradescopeResult) string {
 	output.WriteString("Total Points<br/>")
 	score := fmt.Sprintf("<b>%d / 100</b><br/>", int64(math.Ceil(results.Score)))
 	output.WriteString(score)
-	output.WriteString("<br/><span style=\"color:red\">")
-	output.WriteString("Failed Tests<br/>")
-	for _, test := range results.Tests {
-		if test.Status == "failed" || test.Score < test.MaxScore {
-			output.WriteString(fmt.Sprintf("%s (%f/%f)<br/>", test.Name, test.Score, test.MaxScore))
+	failedTests := filterTests(results.Tests, false)
+	passedTests := filterTests(results.Tests, true)
+	if len(failedTests) > 0 {
+		output.WriteString("<br/><p style='color: #F00'>")
+		output.WriteString("<b>Failed Tests</b><br/>")
+		for _, test := range failedTests {
+			output.WriteString(fmt.Sprintf("%s (%.2f/%.2f)<br/>", test.Name, test.Score, test.MaxScore))
 			// output.WriteString("<pre>")
 			// output.WriteString(test.Output)
 			// output.WriteString("</pre>")
 		}
+		output.WriteString("</p")
 	}
-	output.WriteString("<br/></span><span style=\"color:greeb\">")
-	output.WriteString("Passed Tests<br/>")
 
-	for _, test := range results.Tests {
-		if test.Status == "passwd" || test.Score >= test.MaxScore {
-			output.WriteString(fmt.Sprintf("%s (%f/%f)<br/>", test.Name, test.Score, test.MaxScore))
+	if len(passedTests) > 0 {
+		output.WriteString("<br/><p style='color: #0F0'>")
+		output.WriteString("<b>Passed Tests</b><br/>")
+		for _, test := range passedTests {
+			output.WriteString(fmt.Sprintf("%s (%.2f/%.2f)<br/>", test.Name, test.Score, test.MaxScore))
 			// output.WriteString("<pre>")
 			// output.WriteString(test.Output)
 			// output.WriteString("</pre>")
 		}
+		output.WriteString("</p>")
 	}
-	output.WriteString("</span>")
 	return output.String()
+}
+
+func filterTests(tests []gradescopeResultTests, flag bool) []gradescopeResultTests {
+	var res []gradescopeResultTests
+	for _, test := range tests {
+		if (flag && (test.Status == "passed" || test.Score >= test.MaxScore)) ||
+			(!flag && (test.Status == "failed" || test.Score < test.MaxScore)) {
+			res = append(res, test)
+		}
+	}
+	return res
 }
 
 func prepareSubmission() {
