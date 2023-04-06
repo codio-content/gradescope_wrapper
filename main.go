@@ -101,7 +101,7 @@ func getFeedback(results gradescopeResult) string {
 	failedTests := filterTests(results.Tests, false)
 	passedTests := filterTests(results.Tests, true)
 	if len(failedTests) > 0 {
-		output.WriteString("<br/><p style='color: #F00'>")
+		output.WriteString("<br/><p style='color: #b94a48'>")
 		output.WriteString("<b>Failed Tests</b><br/>")
 		for _, test := range failedTests {
 			output.WriteString(fmt.Sprintf("%s (%.2f/%.2f)<br/>", test.Name, test.Score, test.MaxScore))
@@ -113,7 +113,7 @@ func getFeedback(results gradescopeResult) string {
 	}
 
 	if len(passedTests) > 0 {
-		output.WriteString("<br/><p style='color: #0F0'>")
+		output.WriteString("<br/><p style='color: #468847'>")
 		output.WriteString("<b>Passed Tests</b><br/>")
 		for _, test := range passedTests {
 			output.WriteString(fmt.Sprintf("%s (%.2f/%.2f)<br/>", test.Name, test.Score, test.MaxScore))
