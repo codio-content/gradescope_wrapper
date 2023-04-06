@@ -94,6 +94,7 @@ func submitResults(urlPost string) {
 
 func getFeedback(results gradescopeResult) string {
 	var output strings.Builder
+	output.WriteString("<p>")
 	output.WriteString("Total Points<br/>")
 	score := fmt.Sprintf("<b>%d / 100</b><br/>", int64(math.Ceil(results.Score)))
 	output.WriteString(score)
@@ -122,6 +123,7 @@ func getFeedback(results gradescopeResult) string {
 		}
 		output.WriteString("</p>")
 	}
+	output.WriteString("</p>")
 	return output.String()
 }
 
