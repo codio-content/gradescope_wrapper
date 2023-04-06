@@ -75,7 +75,7 @@ func submitResults(urlPost string) {
 	json.Unmarshal(byteValue, &results)
 	log.Println("Submit results to Codio")
 	score := fmt.Sprintf("%d", int64(math.Ceil(results.Score)))
-	urlValues := url.Values{"grade": {score}, "points": {score}, "feedback": {getFeedback(results)}, "format": {"md"}}
+	urlValues := url.Values{"grade": {score}, "points": {score}, "feedback": {getFeedback(results)}, "format": {"html"}}
 	log.Println(urlValues)
 	response, err := http.PostForm(urlPost, urlValues)
 
@@ -94,22 +94,28 @@ func submitResults(urlPost string) {
 
 func getFeedback(results gradescopeResult) string {
 	var output strings.Builder
-	output.WriteString("Total Points\n")
-	score := fmt.Sprintf("**%d / 100**\n", int64(math.Ceil(results.Score)))
+	output.WriteString("Total Points<br/>")
+	score := fmt.Sprintf("<b>%d / 100</b><br/>", int64(math.Ceil(results.Score)))
 	output.WriteString(score)
-	output.WriteString("<span style=\"color:red\">")
-	output.WriteString("\nFailed Tests\n")
+	output.WriteString("<br/><span style=\"color:red\">")
+	output.WriteString("Failed Tests<br/>")
 	for _, test := range results.Tests {
 		if test.Status == "failed" || test.Score < test.MaxScore {
-			output.WriteString(fmt.Sprintf("%s (%f/%f)\n", test.Name, test.Score, test.MaxScore))
+			output.WriteString(fmt.Sprintf("%s (%f/%f)<br/>", test.Name, test.Score, test.MaxScore))
+			// output.WriteString("<pre>")
+			// output.WriteString(test.Output)
+			// output.WriteString("</pre>")
 		}
 	}
-	output.WriteString("</span><span style=\"color:greeb\">")
-	output.WriteString("\nPassed Tests\n")
+	output.WriteString("<br/></span><span style=\"color:greeb\">")
+	output.WriteString("Passed Tests<br/>")
 
 	for _, test := range results.Tests {
 		if test.Status == "passwd" || test.Score >= test.MaxScore {
-			output.WriteString(fmt.Sprintf("%s (%f/%f)\n", test.Name, test.Score, test.MaxScore))
+			output.WriteString(fmt.Sprintf("%s (%f/%f)<br/>", test.Name, test.Score, test.MaxScore))
+			// output.WriteString("<pre>")
+			// output.WriteString(test.Output)
+			// output.WriteString("</pre>")
 		}
 	}
 	output.WriteString("</span>")
@@ -118,7 +124,9 @@ func getFeedback(results gradescopeResult) string {
 
 func prepareSubmission() {
 	log.Println("Prepare submission")
-	_, err := exec.Command("rsync", "-av", "--exclude", "autograder.zip", "--exclude", "gradescope_wrapper", "/home/codio/workspace/", "/autograder/submission").Output()
+	_, err := exec.Command("rsync", "-av", "--exclude", "autograder.zip", "--exclude", "gradescope_wrapper",
+		"--exclude", ".guides", "--exclude", ".codio", "--exclude", ".settings",
+		"/home/codio/workspace/", "/autograder/submission").Output()
 	check(err)
 	log.Println("Prepare submission info")
 

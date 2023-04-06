@@ -53,7 +53,7 @@ type gradescopeResultTests struct {
 	Name     string  `json:"name"`   // optional
 	// "name_format": "text", // optional formatting for the test case name, see "Output String Formatting" below
 	// "number": "1.1", // optional (will just be numbered in order of array if no number given)
-	// "output": "Giant multiline string that will be placed in a <pre> tag and collapsed by default", // optional
+	Output string `json:"output"`
 	// "output_format": "text", // optional formatting for the test case output, see "Output String Formatting" below
 	// "tags": ["tag1", "tag2", "tag3"], // optional
 	Visibility string `json:"visibility"` // Optional visibility setting
