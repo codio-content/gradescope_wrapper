@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
@@ -73,7 +74,7 @@ func submitResults(urlPost string) {
 	var results gradescopeResult
 	json.Unmarshal(byteValue, &results)
 	log.Println("Submit results to Codio")
-	score := fmt.Sprintf("%d", int64(results.Score))
+	score := fmt.Sprintf("%d", int64(math.Ceil(results.Score)))
 	urlValues := url.Values{"grade": {score}, "points": {score}, "feedback": {getFeedback(results)}, "format": {"md"}}
 	log.Println(urlValues)
 	response, err := http.PostForm(urlPost, urlValues)
@@ -93,10 +94,25 @@ func submitResults(urlPost string) {
 
 func getFeedback(results gradescopeResult) string {
 	var output strings.Builder
-	output.WriteString(results.Output + "\n")
+	output.WriteString("Total Points\n")
+	score := fmt.Sprintf("**%d / 100**\n", int64(math.Ceil(results.Score)))
+	output.WriteString(score)
+	output.WriteString("<span style=\"color:red\">")
+	output.WriteString("\nFailed Tests\n")
 	for _, test := range results.Tests {
-		output.WriteString(fmt.Sprintf("**%s** %s %f\n", test.Name, test.Status, test.Score))
+		if test.Status == "failed" || test.Score < test.MaxScore {
+			output.WriteString(fmt.Sprintf("%s (%f/%f)\n", test.Name, test.Score, test.MaxScore))
+		}
 	}
+	output.WriteString("</span><span style=\"color:greeb\">")
+	output.WriteString("\nPassed Tests\n")
+
+	for _, test := range results.Tests {
+		if test.Status == "passwd" || test.Score >= test.MaxScore {
+			output.WriteString(fmt.Sprintf("%s (%f/%f)\n", test.Name, test.Score, test.MaxScore))
+		}
+	}
+	output.WriteString("</span>")
 	return output.String()
 }
 

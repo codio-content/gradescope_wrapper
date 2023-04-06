@@ -47,11 +47,10 @@ type gradescopeResult struct {
 	Leaderboard      []gradescopeResultLeaderboard `json:"leaderboard"`
 }
 type gradescopeResultTests struct {
-	Score float64 `json:"score"` // TODO
-	// "score": 2.0, // optional, but required if not on top level submission
-	// "max_score": 2.0, // optional
-	Status string `json:"status"` // optional, see "Test case status" below
-	Name   string `json:"name"`   // optional
+	Score    float64 `json:"score"`
+	MaxScore float64 `json:"max_score"`
+	Status   string  `json:"status"` // optional, see "Test case status" below
+	Name     string  `json:"name"`   // optional
 	// "name_format": "text", // optional formatting for the test case name, see "Output String Formatting" below
 	// "number": "1.1", // optional (will just be numbered in order of array if no number given)
 	// "output": "Giant multiline string that will be placed in a <pre> tag and collapsed by default", // optional
