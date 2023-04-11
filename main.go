@@ -120,9 +120,11 @@ func getFeedback(results gradescopeResult, extendedLogs bool) string {
 		output.WriteString("<b>Passed Tests</b><br/>")
 		for _, test := range passedTests {
 			output.WriteString(fmt.Sprintf("%s (%.2f/%.2f)<br/>", test.Name, test.Score, test.MaxScore))
-			// output.WriteString("<pre>")
-			// output.WriteString(test.Output)
-			// output.WriteString("</pre>")
+			if extendedLogs {
+				output.WriteString("<pre>")
+				output.WriteString(test.Output)
+				output.WriteString("</pre>")
+			}
 		}
 		output.WriteString("</p>")
 	}
