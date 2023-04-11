@@ -25,6 +25,7 @@ const notInUse = "not_in_use"
 func main() {
 	args := os.Args[1:]
 	runSetup := slices.Contains(args, "run-setup")
+	extendedLogs := slices.Contains(args, "logs")
 	if checkRoot() {
 		url := os.Getenv("CODIO_AUTOGRADE_V2_URL")
 		if len(url) == 0 {
@@ -45,7 +46,7 @@ func main() {
 		}
 		prepareSubmission()
 		execute()
-		submitResults(url)
+		submitResults(url, extendedLogs)
 		cleanup()
 	} else {
 		reExcuteRoot()
@@ -59,10 +60,10 @@ func executeSetupScript() {
 	check(err)
 }
 
-func submitResults(urlPost string) {
+func submitResults(urlPost string, extendedLogs bool) {
 	log.Println("Read results from gradescope")
 	exist, err := checkFileExists("/autograder/results/results.json")
-	if !exist {
+	if err != nil || !exist {
 		panic("Gradescope results file not found")
 	}
 	jsonFile, err := os.Open("/autograder/results/results.json")
@@ -75,7 +76,7 @@ func submitResults(urlPost string) {
 	json.Unmarshal(byteValue, &results)
 	log.Println("Submit results to Codio")
 	score := fmt.Sprintf("%d", int64(math.Ceil(results.Score)))
-	urlValues := url.Values{"grade": {score}, "points": {score}, "feedback": {getFeedback(results)}, "format": {"html"}}
+	urlValues := url.Values{"grade": {score}, "points": {score}, "feedback": {getFeedback(results, extendedLogs)}, "format": {"html"}}
 	log.Println(urlValues)
 	response, err := http.PostForm(urlPost, urlValues)
 
@@ -92,7 +93,7 @@ func submitResults(urlPost string) {
 	}
 }
 
-func getFeedback(results gradescopeResult) string {
+func getFeedback(results gradescopeResult, extendedLogs bool) string {
 	var output strings.Builder
 	output.WriteString("<p>")
 	output.WriteString("Total Points<br/>")
@@ -105,9 +106,11 @@ func getFeedback(results gradescopeResult) string {
 		output.WriteString("<b>Failed Tests</b><br/>")
 		for _, test := range failedTests {
 			output.WriteString(fmt.Sprintf("%s (%.2f/%.2f)<br/>", test.Name, test.Score, test.MaxScore))
-			// output.WriteString("<pre>")
-			// output.WriteString(test.Output)
-			// output.WriteString("</pre>")
+			if extendedLogs {
+				output.WriteString("<pre>")
+				output.WriteString(test.Output)
+				output.WriteString("</pre>")
+			}
 		}
 		output.WriteString("</p")
 	}
