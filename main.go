@@ -26,6 +26,7 @@ func main() {
 	args := os.Args[1:]
 	runSetup := slices.Contains(args, "run-setup")
 	extendedLogs := slices.Contains(args, "logs")
+
 	if checkRoot() {
 		url := os.Getenv("CODIO_AUTOGRADE_V2_URL")
 		if len(url) == 0 {
@@ -234,7 +235,9 @@ func reExcuteRoot() {
 	ex, err := os.Executable()
 	check(err)
 	path := os.Getenv("PATH")
-	subProcess := exec.Command("sudo", "-E", "env", fmt.Sprintf("PATH=%s", path), ex)
+	args := []string{"-E", "env", fmt.Sprintf("PATH=%s", path), ex}
+	args = append(args, os.Args[1:]...)
+	subProcess := exec.Command("sudo", args...)
 	subProcess.Stdout = os.Stdout
 	subProcess.Stderr = os.Stderr
 	subProcess.Start()
