@@ -113,7 +113,7 @@ func getFeedback(results gradescopeResult, extendedLogs bool) string {
 				output.WriteString("</pre>")
 			}
 		}
-		output.WriteString("</p")
+		output.WriteString("</p>")
 	}
 
 	if len(passedTests) > 0 {
