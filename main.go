@@ -106,11 +106,10 @@ func getFeedback(results gradescopeResult, extendedLogs bool) string {
 		output.WriteString("<br/><p style='color: #b94a48'>")
 		output.WriteString("<b>Failed Tests</b><br/>")
 		for _, test := range failedTests {
-			output.WriteString(fmt.Sprintf("%s (%.2f/%.2f)<br/>", test.Name, test.Score, test.MaxScore))
 			if extendedLogs {
-				output.WriteString("<pre>")
-				output.WriteString(test.Output)
-				output.WriteString("</pre>")
+				printFeedbackTestAdvanced(&output, test)
+			} else {
+				printFeedbackTest(&output, test)
 			}
 		}
 		output.WriteString("</p>")
@@ -120,17 +119,28 @@ func getFeedback(results gradescopeResult, extendedLogs bool) string {
 		output.WriteString("<br/><p style='color: #468847'>")
 		output.WriteString("<b>Passed Tests</b><br/>")
 		for _, test := range passedTests {
-			output.WriteString(fmt.Sprintf("%s (%.2f/%.2f)<br/>", test.Name, test.Score, test.MaxScore))
 			if extendedLogs {
-				output.WriteString("<pre>")
-				output.WriteString(test.Output)
-				output.WriteString("</pre>")
+				printFeedbackTestAdvanced(&output, test)
+			} else {
+				printFeedbackTest(&output, test)
 			}
 		}
 		output.WriteString("</p>")
 	}
 	output.WriteString("</p>")
 	return output.String()
+}
+
+func printFeedbackTest(output *strings.Builder, test gradescopeResultTests) {
+	output.WriteString(fmt.Sprintf("%s (%.2f/%.2f)<br/>", test.Name, test.Score, test.MaxScore))
+}
+
+func printFeedbackTestAdvanced(output *strings.Builder, test gradescopeResultTests) {
+	output.WriteString("<details><summary>")
+	output.WriteString(fmt.Sprintf("%s (%.2f/%.2f)<br/>", test.Name, test.Score, test.MaxScore))
+	output.WriteString("</summary><pre>")
+	output.WriteString(test.Output)
+	output.WriteString("</pre></details>")
 }
 
 func filterTests(tests []gradescopeResultTests, flag bool) []gradescopeResultTests {
