@@ -1,6 +1,6 @@
 name: Publish New Release
 on:
-  create:
+  push:
     tags:
       - 'v*'
 
