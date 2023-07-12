@@ -34,8 +34,8 @@ type gradescopeSubmissionAssignment struct {
 }
 
 type gradescopeResult struct {
-	Score            float64                       `json:"score"`
-	ExecutionTime    int                           `json:"execution_time"`
+	Score            *float64                      `json:"score"`
+	ExecutionTime    *int                          `json:"execution_time"`
 	Output           string                        `json:"output"`
 	OutputFormat     string                        `json:"output_format"`
 	TestOutputFormat string                        `json:"test_output_format"`

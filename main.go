@@ -75,7 +75,7 @@ func submitResults(urlPost string, extendedLogs bool) {
 	var results gradescopeResult
 	json.Unmarshal(byteValue, &results)
 	log.Println("Submit results to Codio")
-	score := fmt.Sprintf("%d", int64(math.Ceil(results.Score)))
+	score := fmt.Sprintf("%d", getScoreFromResult(results))
 	urlValues := url.Values{"grade": {score}, "points": {score}, "feedback": {getFeedback(results, extendedLogs)}, "format": {"html"}}
 	log.Println(urlValues)
 	response, err := http.PostForm(urlPost, urlValues)
@@ -93,11 +93,27 @@ func submitResults(urlPost string, extendedLogs bool) {
 	}
 }
 
+func getScoreFromResult(results gradescopeResult) int64 {
+	if results.Score != nil {
+		//overriden score
+		return int64(math.Ceil(*results.Score))
+	}
+	var totalScore float64
+	var assignedScore float64
+	totalScore = 0
+	assignedScore = 0
+	for _, test := range results.Tests {
+		totalScore += test.MaxScore
+		assignedScore += test.Score
+	}
+	return int64(math.Ceil(assignedScore / totalScore * 100))
+}
+
 func getFeedback(results gradescopeResult, extendedLogs bool) string {
 	var output strings.Builder
 	output.WriteString("<p>")
 	output.WriteString("Total Points<br/>")
-	score := fmt.Sprintf("<b>%d / 100</b><br/>", int64(math.Ceil(results.Score)))
+	score := fmt.Sprintf("<b>%d / 100</b><br/>", getScoreFromResult(results))
 	output.WriteString(score)
 	failedTests := filterTests(results.Tests, false)
 	passedTests := filterTests(results.Tests, true)
