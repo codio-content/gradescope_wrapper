@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"math"
 	"net/http"
@@ -70,7 +69,7 @@ func submitResults(urlPost string, extendedLogs bool) {
 	jsonFile, err := os.Open("/autograder/results/results.json")
 	check(err)
 	defer jsonFile.Close()
-	byteValue, err := ioutil.ReadAll(jsonFile)
+	byteValue, err := io.ReadAll(jsonFile)
 	check(err)
 
 	var results gradescopeResult
@@ -83,7 +82,7 @@ func submitResults(urlPost string, extendedLogs bool) {
 
 	check(err)
 	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	check(err)
 
 	var codioOut codioResponse
@@ -190,7 +189,7 @@ func prepareSubmission() {
 
 	file, _ := json.MarshalIndent(submissionInfo, "", " ")
 
-	_ = ioutil.WriteFile("/autograder/submission_metadata.json", file, 0644)
+	_ = os.WriteFile("/autograder/submission_metadata.json", file, 0644)
 }
 
 func execute() {
@@ -200,16 +199,22 @@ func execute() {
 	os.Chmod("/autograder/run_autograder", 0777)
 
 	log.Println("Executing run_autograde")
-	autograde := exec.Command("/autograder/run_autograder")
+	path := os.Getenv("PATH")
+	autograde := exec.Command("sudo", "-E", "-u", "codio", "env", fmt.Sprintf("PATH=%s", path), "/autograder/run_autograder")
 	autograde.Dir = "/autograder/"
 	stdoutFile, err := os.Create("/autograder/results/stdout")
+	check(err)
+	_, err = exec.Command("chown", "codio:codio", "-R", "/autograder/").Output()
 	check(err)
 	defer stdoutFile.Close()
 	autograde.Stderr = stdoutFile
 	autograde.Stdout = stdoutFile
 	autograde.Start()
 	autograde.Wait()
-	log.Println(fmt.Sprintf("Exite Code: %d", autograde.ProcessState.ExitCode()))
+	log.Printf("Exite Code: %d\n", autograde.ProcessState.ExitCode())
+	// uncomment to debug output
+	// stdpoutFile, _ := os.ReadFile("/autograder/results/stdout")
+	// fmt.Printf("OUTPUT:\n%s\n", stdpoutFile)
 	if autograde.ProcessState.ExitCode() != 0 {
 		panic(fmt.Sprintf("run_autograde failed with %d", autograde.ProcessState.ExitCode()))
 	}
@@ -258,10 +263,6 @@ func check(e error) {
 	if e != nil {
 		panic(e)
 	}
-}
-
-func generateMetadata() {
-	log.Println("generateMetadata")
 }
 
 func checkFileExists(name string) (bool, error) {
@@ -362,8 +363,5 @@ func checkRoot() bool {
 		panic(err)
 	}
 	isRoot := currentUser.Username == "root"
-	if !isRoot {
-		return false
-	}
-	return true
+	return isRoot
 }
