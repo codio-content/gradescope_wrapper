@@ -98,10 +98,8 @@ func getScoreFromResult(results gradescopeResult) int64 {
 		//overriden score
 		return int64(math.Ceil(*results.Score))
 	}
-	var totalScore float64
-	var assignedScore float64
-	totalScore = 0
-	assignedScore = 0
+	var totalScore float64 = 0
+	var assignedScore float64 = 0
 	for _, test := range results.Tests {
 		totalScore += test.MaxScore
 		assignedScore += test.Score
