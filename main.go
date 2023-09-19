@@ -209,6 +209,9 @@ func prepareSubmission() {
 func execute() {
 	log.Println("Copy run_autograde")
 	_, err := copy("/autograder/source/run_autograder", "/autograder/run_autograder")
+	if (err != nil) && !errors.Is(err, os.ErrNotExist) {
+		_, err = copy("/autograder/source/run_autograder.sh", "/autograder/run_autograder")
+	}
 	check(err)
 	os.Chmod("/autograder/run_autograder", 0777)
 
