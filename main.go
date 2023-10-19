@@ -25,6 +25,7 @@ func main() {
 	args := os.Args[1:]
 	runSetup := slices.Contains(args, "run-setup")
 	extendedLogs := slices.Contains(args, "logs")
+	debugFlag := slices.Contains(args, "debug")
 
 	if checkRoot() {
 		url := os.Getenv("CODIO_AUTOGRADE_V2_URL")
@@ -45,7 +46,7 @@ func main() {
 			executeSetupScript()
 		}
 		prepareSubmission()
-		execute()
+		execute(debugFlag)
 		submitResults(url, extendedLogs)
 		cleanup()
 	} else {
@@ -206,7 +207,7 @@ func prepareSubmission() {
 	_ = os.WriteFile("/autograder/submission_metadata.json", file, 0644)
 }
 
-func execute() {
+func execute(debugFlag bool) {
 	log.Println("Copy run_autograde")
 	_, err := copy("/autograder/source/run_autograder", "/autograder/run_autograder")
 	if (err != nil) && !errors.Is(err, os.ErrNotExist) {
@@ -229,9 +230,11 @@ func execute() {
 	autograde.Start()
 	autograde.Wait()
 	log.Printf("Exite Code: %d\n", autograde.ProcessState.ExitCode())
-	// uncomment to debug output
-	// stdpoutFile, _ := os.ReadFile("/autograder/results/stdout")
-	// fmt.Printf("OUTPUT:\n%s\n", stdpoutFile)
+	if debugFlag {
+		stdpoutFile, _ := os.ReadFile("/autograder/results/stdout")
+		fmt.Printf("OUTPUT:\n%s\n", stdpoutFile)
+	}
+
 	if autograde.ProcessState.ExitCode() != 0 {
 		panic(fmt.Sprintf("run_autograde failed with %d", autograde.ProcessState.ExitCode()))
 	}
@@ -293,19 +296,57 @@ func checkFileExists(name string) (bool, error) {
 	return false, err
 }
 
-func unzip(destination string) error {
-	autograderFile := "/home/codio/workspace/.guides/autograder.zip"
-	exist, err := checkFileExists(autograderFile)
-	check(err)
-	if !exist {
-		autograderFile = "/home/codio/workspace/.guides/secure/autograder.zip"
-		exist, err = checkFileExists(autograderFile)
-		check(err)
-		if !exist {
-			panic("autograder.zip not found in .guides/ or .guides/secure")
-		}
+func findAutograder() (string, error) {
+	exist, err := checkFileExists("/home/codio/workspace/.guides/secure/autograder")
+	if err != nil {
+		return "", err
+	}
+	if exist {
+		return "/home/codio/workspace/.guides/secure/autograder", nil
 	}
 
+	exist, err = checkFileExists("/home/codio/workspace/.guides/autograder")
+	if err != nil {
+		return "", err
+	}
+	if exist {
+		return "/home/codio/workspace/.guides/autograder", nil
+	}
+
+	exist, err = checkFileExists("/home/codio/workspace/.guides/secure/autograder.zip")
+	if err != nil {
+		return "", err
+	}
+	if exist {
+		return "/home/codio/workspace/.guides/secure/autograder.zip", nil
+	}
+
+	exist, err = checkFileExists("/home/codio/workspace/.guides/autograder.zip")
+	if err != nil {
+		return "", err
+	}
+	if exist {
+		return "/home/codio/workspace/.guides/autograder.zip", nil
+	}
+	return "", errors.New("autograder not found")
+}
+
+func unzip(destination string) error {
+	// check unzip folder exists
+	autograder, err := findAutograder()
+	check(err)
+	log.Printf("Using %s autograder", autograder)
+
+	if !strings.HasSuffix(autograder, ".zip") {
+		// copy autograder files
+		_, err := exec.Command("rsync", "-av", "--exclude", "autograder.zip", "--exclude", "gradescope_wrapper",
+			"--exclude", ".guides", "--exclude", ".codio", "--exclude", ".settings",
+			fmt.Sprintf("%s/", autograder), destination).Output()
+		check(err)
+		return nil
+	}
+
+	autograderFile := autograder
 	archive, err := zip.OpenReader(autograderFile)
 	if err != nil {
 		panic(err)
